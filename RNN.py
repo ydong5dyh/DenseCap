@@ -115,11 +115,10 @@ net = caffe.Net(model_def,
 word2idx = cPickle.load(open("word-index/word2idx.pkl", "rb"))
 idx2word = cPickle.load(open("word-index/idx2word.pkl", "rb"))
 
-rep_size = 256
+
 len_words = 3000
 feat_size = 2048
 keep = 0.5
-is_train = 0
 total_train = []
 total_regions = []
 total_feature_map = []

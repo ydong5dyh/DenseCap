@@ -32,12 +32,8 @@ def generate_anchors(boxes, height, width, conv_height, conv_width):
         tf.linspace(0.0, height - 0.0, conv_height),
         tf.linspace(0.0, width - 0.0, conv_width)), axis=2), [1, 0, 2])
 
-    # convert boxes from K x 2 to 1 x 1 x K x 2
     boxes = tf.expand_dims(tf.expand_dims(boxes, 0), 0)
-    # convert grid from H' x W' x 2 to H' x W' x 1 x 2
     grid = tf.expand_dims(grid, 2)
-
-    # combine them into single H' x W' x K x 4 tensor
     return tf.concat([tf.tile(grid, [1, 1, k, 1]),
                       tf.tile(boxes, [conv_height, conv_width, 1, 1])], 3)
 
@@ -79,12 +75,6 @@ boxes = tf.Variable([
     (181, 362), (362, 181), (256, 256),
     (362, 724), (724, 362), (512, 512)
 ], dtype=tf.float32)
-bbox = [
-    (45, 90), (90, 45), (64, 64),
-    (90, 180), (180, 90), (128, 128),
-    (181, 362), (362, 181), (256, 256),
-    (362, 724), (724, 362), (512, 512)
-]
 
 conv_height = 14
 conv_width = 14
@@ -123,16 +113,12 @@ ground_truth = tf.stack([yc, xc, height, width], axis=1)
 iou = get_iou(ground_truth, ground_truth_num, anchors, anchors_num)
 positive_mask = tf.reduce_any(tf.greater_equal(iou, 0.5), axis=1)
 
-    # Sample would be considered negative if _all_ ground truch box
-    # have iou less than 0.3
 negative_mask = tf.reduce_all(tf.less(iou, 0.3), axis=1)
 
-    # Select only positive boxes and their corresponding predicted scores
 positive_boxes = tf.boolean_mask(proposals, positive_mask)
 positive_scores = tf.boolean_mask(scores, positive_mask)
 positive_labels = tf.ones_like(positive_scores)
 
-    # Same for negative
 negative_boxes = tf.boolean_mask(proposals, negative_mask)
 negative_scores = tf.boolean_mask(scores, negative_mask)
 negative_labels = tf.zeros_like(negative_scores)
@@ -143,7 +129,7 @@ score_loss = tf.reduce_sum(tf.square(predicted_scores - true_labels))
 
 ground_truth = tf.expand_dims(ground_truth, axis=0)
 ground_truth = tf.tile(ground_truth, [anchors_num, 1, 1])
-# anchor_centers shape is N x 4 where N is count and 4 are ya,xa,ha,wa
+
 anchors = tf.expand_dims(anchors, axis=1)
 anchors = tf.tile(anchors, [1, ground_truth_num, 1])
 y_anchor, x_anchor, height_anchor, width_anchor = tf.unstack(anchors, axis=2)
