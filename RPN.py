@@ -94,7 +94,6 @@ k = 12
 ground_truth_num = 10
 anchors_num = k * conv_height * conv_width
 img_num = 10
-img_Epoch = 200000
 train_img = np.random.permutation(img_num) + 1
 description = json.load(open("./VG/region_descriptions.json", "rb"))
 
@@ -176,9 +175,9 @@ config.allow_soft_placement = True
 sess = tf.Session(config=config)
 sess.run(tf.global_variables_initializer())
 saver = tf.train.Saver(tf.global_variables())
-print "start training ..."
-for img_epoch in range(img_Epoch):
-    sess.run(tf.assign(learning_rate, 0.0001 * (0.98 ** (img_epoch / 10000))))
+print("Training Started")
+for img_epoch in range(1000):
+    sess.run(tf.assign(learning_rate, 0.001 * (0.9 ** (epoch / 100))))
     for img_id in train_img:
         img = PIL_Image.open("./VG/VG_100K/" + str(img_id) + ".jpg")
         regions = description[img_id - 1]["regions"]
@@ -197,15 +196,13 @@ for img_epoch in range(img_Epoch):
         ground_truth_ = np.array((ground_truth_))
         feature = img2feature(img, net)
         feature = np.transpose(feature, [0, 2, 3, 1])
-        Epoch = 7
         with tf.device("/gpu:0"):
-            for epoch in range(Epoch):
+            for epoch in range(7):
                 sess.run([train_step], feed_dict={feat_input: feature, ground_truth_pre: ground_truth_})
-    if img_epoch % (img_Epoch / 100) == 0:
-        print "epoch:", img_epoch, "img:", img_id, sess.run([total_loss],
+    if img_epoch % 50 == 0:
+        print("epoch:", img_epoch, "img:", img_id, sess.run([total_loss],
                                                             feed_dict={feat_input: feature,
-                                                                       ground_truth_pre: ground_truth_})
-    if (img_epoch + 1) % (img_Epoch / 10) == 0:
+                                                                       ground_truth_pre: ground_truth_}))
         saver.save(sess, 'RPN_model/fasterRcnn.module', global_step=img_epoch + 1)
 sess.close()
-print "train end"
+print("Training Finished")

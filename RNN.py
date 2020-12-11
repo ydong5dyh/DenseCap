@@ -285,6 +285,7 @@ for img_id in range(1, 11):
 sess.close()
 
 
+print("Training Started!")
 logits, last_state, _, _, _, _, _, _, _ = rnn_network(input_feature, input_data, keep_prob)
 labels = tf.reshape(output_label, [-1])
 loss = seq2seq.sequence_loss_by_example([logits], [labels], [tf.ones_like(labels, dtype=tf.float32)], len_words)
@@ -300,7 +301,7 @@ config.allow_soft_placement = True
 with tf.Session(config=config) as sess:
     sess.run(tf.global_variables_initializer())
     saver = tf.train.Saver(tf.global_variables())
-        for epoch in range(500):
+    for epoch in range(500):
         sess.run(tf.assign(learning_rate, 0.001 * (0.9 ** (epoch / 100))))
         for k in range(len(total_train)):
             train_data = total_train[k]
@@ -312,7 +313,7 @@ with tf.Session(config=config) as sess:
                                             feed_dict={input_data: train,
                                                        input_image_feature: feature_map[i].reshape(1, 2048),
                                                        output_labels: test, keep_prob: keep})
-                if (epoch + 1) % 50 == 0:
-                print(epoch, train_loss)
-    saver.save(sess, 'RNN_model/test.module')
-print "train end!"
+    if epoch % 50 == 0:
+        print(epoch, train_loss)
+        saver.save(sess, 'RNN_model/test.module')
+print("Training Finished!")
